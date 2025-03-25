@@ -118,6 +118,14 @@ Examine the data. How is it organized?
 
 strawb <- strawberry |> drop_one_value_col()
 
+## test <- show_unique(strawb, 10)
+# Starberries' grown place :)
+state_all <- strawberry |> distinct(State)
+state_all1 <- strawberry |> group_by(State) |> count()
+# barplot for manufacturing place :)
+ggplot(state_all1, aes(x = state_all1$State, y = state_all1$n)) +
+  geom_bar(stat = "identity", fill = "red") +
+  labs(title = "Bar Chart", x = "State", y = "Count")
 
 ```
 
@@ -247,4 +255,8 @@ straw_sur_c <- strw_survey |> filter(State == "CALIFORNIA")
 
 rm(strw_census, strw_survey, unique_cen, unique_sur)
 
+```
+
+```{r}
+rm(list=ls())
 ```
