@@ -1,0 +1,270 @@
+---
+title: "415_Midterm_Project"
+author: "Haoyi Liu"
+format: html
+editor: visual
+---
+
+## Data Set
+
+The dataset contains strawberry farming data with details about conventional and organic cultivation.
+
+## Objective
+
+Answer the following questions about strawberries using available data.
+
+-   Where they are grown? By whom?
+
+-   Are they really loaded with carcinogenic poisons?
+
+-   Are they really good for your health? Bad for your health?
+
+-   Are organic strawberries carriers of deadly diseases?
+
+-   When I go to the market should I buy conventional or organic strawberries?
+
+## Data Cleaning
+
+Install packages
+
+```{r}
+# install required packages
+install.packages("knitr")
+install.packages("kableExtra")
+install.packages("tidyverse")
+install.packages("stringr")
+install.packages("ggplot2")
+```
+
+```{r}
+library(knitr)  
+library(kableExtra)
+library(tidyverse)
+library(stringr)
+library(ggplot2)
+```
+
+Read File (From `USDA-NASS starwberries.qmd`)
+
+```{r}
+# Label for the code chunk
+#| label: read data - glimpse 
+
+# Read the CSV file "strawb_mar6.csv" into a data frame called 'strawberry'
+# - 'col_names = TRUE' tells read_csv to treat the first row as column names
+# - 'show_col_types = FALSE' suppresses printing of column type information
+strawberry <- read_csv("strawb_mar6.csv", 
+                       col_names = TRUE,
+                       show_col_types = FALSE)
+
+# Source the file "my_functions.R" to load custom functions defined in that script
+source("my_functions.R")
+```
+
+```{r}
+# remove columns from a data frame that contain only a single unique value
+strawb <- strawberry |> drop_one_value_col()
+```
+
+Exploring Data
+
+```{r}
+#| label: explore strawb data
+
+# assume data is a tibble
+# n_show is the number of rows to show
+
+show_unique <- function(data, nrows=10 ){
+  # make a tibble items to hold the data to show
+  # browser()
+  a <- nrows * dim(data)[2]  # number of cells in items
+  items <- rep(" ", a) # items will coerce everything to char
+  dim(items) <- c(nrows ,dim(data)[2]) # shape items
+  items <- as_tibble(items)
+  colnames(items) <- colnames(data)
+  # browser()
+  for(i in 1:dim(data)[2]){
+
+    col_items <- unique(data[,i])
+    # row_ex is the number of rows needed 
+    # to make the column length conformable with items
+    row_ex <- nrows - dim(col_items)[1] 
+    if(row_ex >= 0){
+      ex_rows <- tibble(rep(" ",row_ex))
+      colnames(ex_rows) <- colnames(col_items)
+      col_add <- rbind2(col_items, ex_rows)
+      
+    } else if(row_ex < 0){
+      col_add <- col_items[1:10,]
+      
+    }
+
+    items[,i] <- col_add
+
+  }
+  
+  return(items)
+}
+
+#test <- show_unique(strawb, 10)
+```
+
+```{r}
+#|label: split strawb into census and survey pieces
+
+strw_census <- strawb |> filter(Program == "CENSUS")
+
+strw_survey <- strawb |> filter(Program == "SURVEY")
+
+nrow(strawb) == (nrow(strw_census) + nrow(strw_survey))
+```
+
+```{r}
+#| label: examine Census and survey tibbles
+#| warning: false
+
+# Remove columns that contain only a single unique value
+s_census <- strw_census |> drop_one_value_col(prt_val = TRUE)
+s_survey <- strw_survey |> drop_one_value_col(prt_val = TRUE)
+
+# Preview up to 10 unique values per column in each data set
+unique_cen <- s_census |> show_unique(nrows = 10)
+unique_sur <- s_survey |> show_unique(nrows = 10)
+
+# Drop redundant or unnecessary Data
+strw_census <- s_census |> select(-`State ANSI`)
+
+# Remove 'State ANSI', 'Week Ending', and 'Period' for Data Cleaning
+strw_survey <- s_survey |> select(-`State ANSI`, -`Week Ending`, -Period)
+
+# Removing intermediate and temporary data set
+rm(s_census, s_survey, strawberry, items)
+```
+
+## Strawberry Growth Location
+
+```{r}
+# Starberries' grown place :)
+state_all <- strawb |> distinct(State)
+state_all1 <- strawb |> group_by(State) |> count()
+
+# Improved bar plot
+ggplot(state_all1, aes(x = reorder(State, -n), y = n)) +
+  geom_bar(stat = "identity", fill = "lightgreen", color = "black") +
+  labs(
+    title = "Strawberry Production by State",
+    x = "State",
+    y = "Number of Records"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  )
+```
+
+```{r}
+# Show unique values in the 'Domain' column from both datasets
+unique(strw_census$Domain)
+unique(strw_survey$Domain)
+```
+
+# Part 1: Chemical Analysis
+
+## Gather Chemical Information Data
+
+```{r}
+#Select all the rows that contains chemical use information
+chemical <- strw_survey[str_detect(strw_survey$`Domain Category`, regex("chemical", ignore_case = TRUE)),] 
+
+#Taking only CA and FL state data of chemical usage
+chemical_CA <- chemical[chemical$State == "CALIFORNIA", ]
+chemical_FL <- chemical[chemical$State == "FLORIDA", ]
+print(chemical_CA)
+print(chemical_FL)
+rm(chemical)
+
+```
+
+### Chemical 1: Captan
+
+```{r}
+# First we check the use of Captan
+# Use library of stringr functions to select the captan information
+# Filter rows from chemical_CA
+captan_CA <- chemical_CA[str_detect(chemical_CA$`Domain Category`, regex("captan", ignore_case = TRUE)), ]
+
+# Filter rows from chemical_FL
+captan_FL <- chemical_FL[str_detect(chemical_FL$`Domain Category`, regex("captan", ignore_case = TRUE)), ]
+
+captan_combined <- rbind(captan_CA, captan_FL)
+
+rm(captan_CA)
+rm(captan_FL)
+
+print(captan_combined)
+# Now we get the table of captan use data in both California and Florida
+```
+
+```{r}
+# now we start to reorganize the data in the order of category at first, Item for the second, and state and year
+
+
+captan <- captan_combined |> group_by(Category, Item, State, Year) |> count(Value)
+
+print(captan)
+# This table  directly shows the transition of captan use from year 2021 to 2023 in each state
+```
+
+```{r}
+#Then we can make a bar chart to compare the captan use in California and Florida
+
+#Generate Data from 2021 and 2023
+captan_2021 <- captan[str_detect(captan$Year, regex("2021", ignore_case = TRUE)), ]
+captan_2023 <- captan[str_detect(captan$Year, regex("2023", ignore_case = TRUE)), ]
+
+#Then we can make the graph (code perfection by chatgpt, for a better visual effect)
+ggplot(captan_2021, aes(x = State, y = Value, fill = State)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ Category + Item, scales = "free_y") +
+  labs(title = "Total Value by State (2021)",
+       x = "State",
+       y = "Total Value") +
+  theme_minimal()
+
+ggplot(captan_2023, aes(x = State, y = Value, fill = State)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ Category + Item, scales = "free_y") +
+  labs(title = "Total Value by State (2023)",
+       x = "State",
+       y = "Total Value") +
+  theme_minimal()
+
+rm(captan_2021,captan_2023)
+```
+
+From the graph of 2021, California uses the fungicide that contains captan (a certified carcinogenic chemical) more than Florida in general. However, when we look up into other measurement, the average detection of captan use in California is less than Florida. This is because California Strawberry Production Firm is larger than Florida in size.
+
+In 2023, There are some changes in the data. The measure in lb/acre/year and measure in number of California firm is higher than Florida firm, meaning that California uses captan fungicide more often per year, and the average number that detected captan is higher than Florida.
+
+### Chemical 2: Thiram
+
+```{r}
+#Follows the same step as captan
+#Filter rows form chemical_CA
+thiram_CA <- chemical_CA[str_detect(chemical_CA$`Domain Category`, regex("thiram", ignore_case = TRUE)), ]
+
+# Filter rows from chemical_FL
+thiram_FL <- chemical_FL[str_detect(chemical_FL$`Domain Category`, regex("thiram", ignore_case = TRUE)), ]
+
+#Get the thiram information data and gather them into one data set
+thiram_combined <- rbind(thiram_CA, thiram_FL)
+
+#remove intermediate data set
+rm(thiram_CA)
+rm(thiram_FL)
+
+
+```
+
+### Chemical 3:
