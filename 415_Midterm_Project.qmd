@@ -184,7 +184,7 @@ rm(chemical)
 
 ```
 
-In the first question, the three chemical picked from all the possible chemical is captan, thiram, propiconazole
+In the first question, the three chemical picked from all the possible chemical is captan, thiram, novaluron
 
 ## Chemical 1: Captan
 
