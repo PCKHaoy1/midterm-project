@@ -1,6 +1,5 @@
 ---
-title: "415_Midterm_Project"
-author: "Haoyi Liu"
+title: "415_Midterm_Proj"
 format: pdf
 editor: visual
 ---
@@ -19,15 +18,16 @@ The csv file named "strawb_mar6.csv", which contains strawberry cultivation data
 
 ## Data Cleaning
 
-Install packages
+Install packages that are needed
 
 ```{r}
-# install required packages
+#install required packages
 #install.packages("knitr")
 #install.packages("kableExtra")
 #install.packages("tidyverse")
 #install.packages("stringr")
 #install.packages("ggplot2")
+#install.packages("scales")
 
 ```
 
@@ -39,7 +39,7 @@ library(stringr)
 library(ggplot2)
 ```
 
-Read File (From `USDA-NASS starwberries.qmd`)
+Run the data cleaning method as same as `USDA-NASS starwberries.qmd`
 
 ```{r}
 # Label for the code chunk
@@ -139,19 +139,19 @@ rm(s_census, s_survey, strawberry, items)
 ## Strawberry Growth Location
 
 ```{r}
-# Starberries' grown place :)
+# Starberries' grown place
 state_all <- strawb |> distinct(State)
 state_all1 <- strawb |> group_by(State) |> count()
 
-# Improved bar plot
+# Improved bar plot (used chatgpt for better visualization of the bar chart)
 ggplot(state_all1, aes(x = reorder(State, -n), y = n)) +
   geom_bar(stat = "identity", fill = "lightgreen", color = "black") +
   labs(
-    title = "Strawberry Production by State",
-    x = "State",
-    y = "Number of Records"
+    title = "Strawberry Production Records by State",
+    x = "State Name",
+    y = "n = #records"
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 15) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     plot.title = element_text(face = "bold", hjust = 0.5)
@@ -166,17 +166,20 @@ unique(strw_survey$Domain)
 
 # Part 1: Chemical Analysis
 
-## Gather Chemical Information Data
+## Gathering Chemical Information Data
 
 ```{r}
 #Select all the rows that contains chemical use information
-chemical <- strw_survey[str_detect(strw_survey$`Domain Category`, regex("chemical", ignore_case = TRUE)),] 
+chemical <- strw_survey[str_detect(strw_survey$`Domain Category`,
+                                   regex("chemical", ignore_case = TRUE)),] 
 
 #Taking only CA and FL state data of chemical usage
 chemical_CA <- chemical[chemical$State == "CALIFORNIA", ]
 chemical_FL <- chemical[chemical$State == "FLORIDA", ]
 print(chemical_CA)
 print(chemical_FL)
+
+#clean the intermediate data set
 rm(chemical)
 
 ```
@@ -189,13 +192,16 @@ In the first question, the three chemical picked from all the possible chemical 
 # First we check the use of Captan
 # Use library of stringr functions to select the captan information
 # Filter rows from chemical_CA (code from R studio stringr cheat sheet)
-captan_CA <- chemical_CA[str_detect(chemical_CA$`Domain Category`, regex("CAPTAN", ignore_case = TRUE)), ]
+captan_CA <- chemical_CA[str_detect(chemical_CA$`Domain Category`,
+                                    regex("CAPTAN", ignore_case = TRUE)), ]
 
 # Filter rows from chemical_FL
-captan_FL <- chemical_FL[str_detect(chemical_FL$`Domain Category`, regex("CAPTAN", ignore_case = TRUE)), ]
+captan_FL <- chemical_FL[str_detect(chemical_FL$`Domain Category`,
+                                    regex("CAPTAN", ignore_case = TRUE)), ]
 
 captan_combined <- rbind(captan_CA, captan_FL)
 
+#clean intermediate steps
 rm(captan_CA)
 rm(captan_FL)
 
@@ -216,11 +222,14 @@ print(captan)
 ```{r}
 #Then we can make a bar chart to compare the captan use in California and Florida
 
-#Generate Data from 2021 and 2023
-captan_2021 <- captan[str_detect(captan$Year, regex("2021", ignore_case = TRUE)), ]
-captan_2023 <- captan[str_detect(captan$Year, regex("2023", ignore_case = TRUE)), ]
+#Generate Data from 2021 and 2023(using stringr functions)
+captan_2021 <- captan[str_detect(captan$Year, 
+                                 regex("2021", ignore_case = TRUE)), ]
+captan_2023 <- captan[str_detect(captan$Year, 
+                                 regex("2023", ignore_case = TRUE)), ]
 
-#Ensure the value under Value column is numeric, so in graph it can provide the correct relationship bar (higher value has a higher bar)
+#Ensure the value under Value column is numeric 
+#so in graph it can provide the correct relationship bar
 captan_2021$Value <- as.numeric(gsub(",", "", captan_2021$Value))
 captan_2023$Value <- as.numeric(gsub(",", "", captan_2023$Value))
 
@@ -232,19 +241,19 @@ ggplot(captan_2021, aes(x = State, y = Value, fill = State)) +
   geom_text(aes(label = round(Value, 1)),
             position = position_dodge(width = 0.9),
             vjust = -0.2, size = 3, fontface = "bold") +
-  facet_wrap(~ Category + Item, scales = "free_y", ncol = 3) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  facet_wrap(~ Category + Item, scales = "free_y", nrow = 3) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.5))) +
   labs(title = "Captan Use in Strawberry Production by State (2021)",
        x = NULL,
        y = "Total Value") +
   theme_minimal(base_size = 9) +
   theme(
     strip.text = element_text(size = 8, face = "bold"),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    axis.text.y = element_text(size = 7),
+    axis.text.x = element_text(),
+    axis.text.y = element_text(),
     plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
     panel.spacing = unit(0.4, "lines"),
-    legend.position = "none"
+    legend.position = "right"
   )
 
 
@@ -255,19 +264,19 @@ ggplot(captan_2023, aes(x = State, y = Value, fill = State)) +
   geom_text(aes(label = round(Value, 1)),
             position = position_dodge(width = 0.9),
             vjust = -0.2, size = 3, fontface = "bold") +
-  facet_wrap(~ Category + Item, scales = "free_y", ncol = 3) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  facet_wrap(~ Category + Item, scales = "free_y", nrow = 3) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.5))) +
   labs(title = "Captan Use in Strawberry Production by State (2023)",
        x = NULL,
        y = "Total Value") +
   theme_minimal(base_size = 9) +
   theme(
     strip.text = element_text(size = 8, face = "bold"),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    axis.text.y = element_text(size = 7),
+    axis.text.x = element_text(""),
+    axis.text.y = element_text(""),
     plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
     panel.spacing = unit(0.4, "lines"),
-    legend.position = "none"
+    legend.position = "right"
   )
 
 #Remove intermediate Data set
@@ -283,10 +292,12 @@ In 2023, There are some changes in the data. The measure in lb/acre/year and mea
 ```{r}
 #Follows the same step as captan
 #Filter rows form chemical_CA
-thiram_CA <- chemical_CA[str_detect(chemical_CA$`Domain Category`, regex("THIRAM", ignore_case = TRUE)), ]
+thiram_CA <- chemical_CA[str_detect(chemical_CA$`Domain Category`,
+                                    regex("THIRAM", ignore_case = TRUE)), ]
 
 # Filter rows from chemical_FL
-thiram_FL <- chemical_FL[str_detect(chemical_FL$`Domain Category`, regex("THIRAM", ignore_case = TRUE)), ]
+thiram_FL <- chemical_FL[str_detect(chemical_FL$`Domain Category`,
+                                    regex("THIRAM", ignore_case = TRUE)), ]
 
 #Get the thiram information data and gather them into one data set
 thiram_combined <- rbind(thiram_CA, thiram_FL)
@@ -296,13 +307,16 @@ rm(thiram_CA)
 rm(thiram_FL)
 
 #Table of Comparison of different year by same state
-thiram <- thiram_combined |> group_by(Category, Item, State, Year) |> count(Value)
+thiram <- thiram_combined |> group_by(Category, 
+                                      Item, State, Year) |> count(Value)
 
 print(thiram)
 
 #Rearrange the data for bar chart
-thiram_2021 <- thiram[str_detect(thiram$Year, regex("2021", ignore_case = TRUE)), ]
-thiram_2023 <- thiram[str_detect(thiram$Year, regex("2023", ignore_case = TRUE)), ]
+thiram_2021 <- thiram[str_detect(thiram$Year, 
+                                 regex("2021", ignore_case = TRUE)), ]
+thiram_2023 <- thiram[str_detect(thiram$Year, 
+                                 regex("2023", ignore_case = TRUE)), ]
 
 #Ensure the value under Value column is numeric, so in graph it can provide the right relationship bar (higher value has a higher bar)
 thiram_2021$Value <- as.numeric(gsub(",", "", thiram_2021$Value))
@@ -316,19 +330,19 @@ ggplot(thiram_2021, aes(x = State, y = Value, fill = State)) +
   geom_text(aes(label = round(Value, 1)),
             position = position_dodge(width = 0.9),
             vjust = -0.2, size = 3, fontface = "bold") +
-  facet_wrap(~ Category + Item, scales = "free_y", ncol = 3) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  facet_wrap(~ Category + Item, scales = "free_y", nrow = 3) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.5))) +
   labs(title = "Thiram Use in Strawberry Production by State (2021)",
        x = NULL,
        y = "Total Value") +
   theme_minimal(base_size = 9) +
   theme(
     strip.text = element_text(size = 8, face = "bold"),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    axis.text.y = element_text(size = 7),
+    axis.text.x = element_text(),
+    axis.text.y = element_text(),
     plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
     panel.spacing = unit(0.4, "lines"),
-    legend.position = "none"
+    legend.position = "right"
   )
 
 ggplot(thiram_2023, aes(x = State, y = Value, fill = State)) +
@@ -338,19 +352,19 @@ ggplot(thiram_2023, aes(x = State, y = Value, fill = State)) +
   geom_text(aes(label = round(Value, 1)),
             position = position_dodge(width = 0.9),
             vjust = -0.2, size = 3, fontface = "bold") +
-  facet_wrap(~ Category + Item, scales = "free_y", ncol = 3) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  facet_wrap(~ Category + Item, scales = "free_y", nrow = 3) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.5))) +
   labs(title = "Thiram Use in Strawberry Production by State (2023)",
        x = NULL,
        y = "Total Value") +
   theme_minimal(base_size = 9) +
   theme(
     strip.text = element_text(size = 8, face = "bold"),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    axis.text.y = element_text(size = 7),
+    axis.text.x = element_text(),
+    axis.text.y = element_text(),
     plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
     panel.spacing = unit(0.4, "lines"),
-    legend.position = "none"
+    legend.position = "right"
   )
 
 
@@ -371,12 +385,12 @@ From the Graph of 2023, California is using thiram included product more than Fl
 ```{r}
 #Follows the same step as captan
 #Filter rows form chemical_CA
-nov_CA <- chemical_CA[str_detect(chemical_CA$`Domain Category`, regex("NOVALURON", 
-                                                                      ignore_case = TRUE)), ]
+nov_CA <- chemical_CA[str_detect(chemical_CA$`Domain Category`,
+                                 regex("NOVALURON", ignore_case = TRUE)), ]
 
 # Filter rows from chemical_FL
-nov_FL <- chemical_FL[str_detect(chemical_FL$`Domain Category`, regex("NOVALURON", 
-                                                                      ignore_case = TRUE)), ]
+nov_FL <- chemical_FL[str_detect(chemical_FL$`Domain Category`,
+                                 regex("NOVALURON", ignore_case = TRUE)), ]
 
 #Get the thiram information data and gather them into one data set
 nov_combined <- rbind(nov_CA, nov_FL)
@@ -394,10 +408,14 @@ print(nov)
 nov_2021 <- nov[str_detect(nov$Year, regex("2021", ignore_case = TRUE)), ]
 nov_2023 <- nov[str_detect(nov$Year, regex("2023", ignore_case = TRUE)), ]
 
-#Ensure the value under Value column is numeric, so in graph it can provide the right relationship bar (higher value has a higher bar)
+#Ensure the value under Value column is numeric, 
+#so in graph it can provide the right relationship bar
+#higher value has a higher bar
 nov_2021$Value <- as.numeric(gsub(",", "", nov_2021$Value))
 nov_2023$Value <- as.numeric(gsub(",", "", nov_2023$Value))
-#Same year, same domain category and item, but different state record comparison (code perfection by chatgpt, for a better visualization)
+
+#Same year, same domain category and item, but different state 
+#record comparison (code perfection by chatgpt, for a better visualization)
 
 ggplot(nov_2021, aes(x = State, y = Value, fill = State)) +
   geom_bar(stat = "identity",
@@ -406,19 +424,19 @@ ggplot(nov_2021, aes(x = State, y = Value, fill = State)) +
   geom_text(aes(label = round(Value, 1)),
             position = position_dodge(width = 0.9),
             vjust = -0.2, size = 3, fontface = "bold") +
-  facet_wrap(~ Category + Item, scales = "free_y", ncol = 3) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  facet_wrap(~ Category + Item, scales = "free_y", nrow = 3) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.5))) +
   labs(title = "NOVALURON Use in Strawberry Production by State (2021)",
        x = NULL,
        y = "Total Value") +
   theme_minimal(base_size = 9) +
   theme(
     strip.text = element_text(size = 8, face = "bold"),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    axis.text.y = element_text(size = 7),
+    axis.text.x = element_text(),
+    axis.text.y = element_text(),
     plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
     panel.spacing = unit(0.4, "lines"),
-    legend.position = "none"
+    legend.position = "right"
   )
 
 ggplot(nov_2023, aes(x = State, y = Value, fill = State)) +
@@ -428,19 +446,19 @@ ggplot(nov_2023, aes(x = State, y = Value, fill = State)) +
   geom_text(aes(label = round(Value, 1)),
             position = position_dodge(width = 0.9),
             vjust = -0.2, size = 3, fontface = "bold") +
-  facet_wrap(~ Category + Item, scales = "free_y", ncol = 3) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  facet_wrap(~ Category + Item, scales = "free_y", nrow = 3) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.5))) +
   labs(title = "NOVALURON Use in Strawberry Production by State (2023)",
        x = NULL,
        y = "Total Value") +
   theme_minimal(base_size = 9) +
   theme(
     strip.text = element_text(size = 8, face = "bold"),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    axis.text.y = element_text(size = 7),
+    axis.text.x = element_text(),
+    axis.text.y = element_text(),
     plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
     panel.spacing = unit(0.4, "lines"),
-    legend.position = "none"
+    legend.position = "right"
   )
 
 
@@ -455,6 +473,8 @@ From the graph of 2021, we can see California uses Novaluron treatment more than
 From the graph of 2023, we can see California still uses Novaluron more than Florida in total, and since the total quantity of california increases a lot. The other per capita measurement is higher than Florida, except measured in area bearing. It means more percentage of the Florida strawberry is treated with novaluron compare to California.
 
 # Part 2: Business Analysis
+
+## Data Cleaning and Reorganization
 
 ```{r}
 # recall that organic information is and sales stuff is all in census data
@@ -479,8 +499,100 @@ org_FL1 <- org_FL[str_detect(org_FL$Category, regex("SALES", ignore_case = TRUE)
 conv_CA1 <- conv_CA[str_detect(conv_CA$Domain, regex("TOTAL", ignore_case = TRUE)), ]
 conv_FL1 <- conv_FL[str_detect(conv_FL$Domain, regex("TOTAL", ignore_case = TRUE)), ]
 
+#We now have the organic and convential straberry data for California and Florida
 org <- rbind(org_CA1,org_FL1)
 conv <- rbind(conv_CA1,conv_FL1)
 
-rm(org_CA,org_CA1,org_FL,conv_CA,conv_CA1,conv_FL,conv_FL1,conv_org)
+#remove the unecessary data set
+rm(org_CA,org_CA1,org_FL,conv_CA,conv_CA1,conv_FL,conv_FL1)
+
+#we can see the table
+print(org)
+print(conv)
+```
+
+## Organic Strawberry Data Visualization
+
+```{r}
+#make sure the value is numeric value
+org$Value <- as.numeric(gsub(",", "", org$Value))
+
+#then we can visualized the data in scatter plot for comparison
+
+#Bar chart: Value by State, Measurement Unit
+ggplot(org, aes(x = State, y = Value, fill = Item)) +
+  geom_col(position = position_dodge(width = 0.9)) +
+  geom_text(aes(label = scales::comma(Value)),
+            position = position_dodge(width = 0.9),
+            vjust = -0.5, size = 3) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.5))) +
+  labs(title = "Organic Strawberry Sales by State and Unit",
+       x = "State",
+       y = "Sales Value",
+       fill = "Measurement Unit") +
+  theme_minimal()
+
+
+```
+
+This bar chart shows organic strawberry sales in California and Florida, measured in two units: dollars (MEASURED IN \$) and hundredweight (CWT).
+
+California shows significantly higher sales in both units, with over \$311 million compared to Florida’s \$18 million. The difference in scale between dollar and CWT values highlights the economic weight of California’s organic strawberry market.
+
+## Conventional Strawberry Data Visualization
+
+```{r}
+#make sure the number in Value column is numeric value for graphing
+conv$Value <- as.numeric(gsub(",", "", conv$Value))
+
+#now we can make a bar chart to visualize the date for conventional strawberries
+
+
+library(ggplot2)
+library(scales)
+
+ggplot(conv, aes(x = Item, y = Value, fill = State)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  geom_text(aes(label = comma(Value)),
+            position = position_dodge(width = 1),
+            vjust = -0.3, size = 2, fontface = "bold") +
+  labs(
+    title = "Conventional Strawberry Income by State and Item (2022)",
+    x = "Income Type",
+    y = "Value ($)",
+    fill = "State"
+  ) +
+  scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.2))) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    legend.position = "top",
+    legend.title = element_text(face = "bold")
+  )
+
+  
+
+```
+
+This chart compares conventional strawberry farm income in California and Florida across five income categories in 2022.\
+
+California shows a clear lead over Florida across all income categories related to conventional strawberry farming. The most notable difference is in "Operations – Gain," where California generated approximately \$16.2 billion, compared to Florida’s \$3.4 billion.
+
+Additionally, California reports significantly higher net income for both operations and producers. These figures highlight California’s dominant position in the conventional strawberry industry, both in terms of production scale and overall profitability.
+
+# General Conclusion
+
+From the data cleaning and analyze above, many potential problems is reflecting during the whole process.
+
+In the aspect of human health, the production of strawberry still contains risks of extremely toxic chemicals. In the analysis is Captan and Thiram. Using chemical treatment in fruit production industry is inevitable. But the bar chart above, analyzing chemical detection, could be a preliminary guideline of picking strawberries by qualities, for both companies or individuals who wants to consume strawberries.
+
+In the aspect of Environment Impact, the bar chart comparison of Novaluron shows that strawberry production is still inevitably negatively affect the environment by high dose using of this chemical. Thus, lowering the usage of chemical or developing new product that are more environmental friendly is needed.
+
+In the business analysis section, we can see California dominates the strawberry production firm. in both organic and conventional. Calling back to what we saw from chemical data, California strawberry firm now should consider a more environmental and human health friendly production process, and become a leading role of such development.
+
+```{r}
+#here is the code to clean all the previos analysis and rerun the program, you can use it by remove the '#
+#rm(list = ls())
 ```
