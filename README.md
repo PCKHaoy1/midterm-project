@@ -1,4 +1,5 @@
-# Strawberry Production Analysis Midterm Project by Haoyi Liu
+# Strawberry Production Analysis Midterm Project 
+# by Haoyi Liu
 
 ## Project Description
 
@@ -32,6 +33,10 @@ The analysis is split into two main components:
 
 - **Primary Data**:  
   The data used in this project was sourced from survey responses and USDA/NASS reports related to strawberry production and chemical usage.
+  file name: strawb_mar6.csv
+- **Data Cleaning Support**:
+  I followed the basic starter page of data cleaning in lecture
+  file name: my_functions.R, and USDA-NASS strawberries.qmd
 - **Visualization Support**:  
   Data visualization guidance and code refinement were assisted by **ChatGPT**.
 > GPT-based support was used for improving ggplot formatting and creating clear, publication-ready graphics using R and Quarto.
