@@ -17,7 +17,7 @@ The analysis is split into two main components:
 ### 2. Business Analysis
 - Compares **net income**, **operational gains/losses**, and **producer profits** from **conventional** and **organic** strawberry farming.
 - Investigates how income metrics vary between states and production types.
-- Visualizes findings using bar charts and regression models.
+- Visualizes findings using bar charts and data cleaning.
 
 ## Tools & Techniques
 - **Language**: R (with Quarto for reports)
@@ -25,8 +25,7 @@ The analysis is split into two main components:
 - **Output**: Visualizations, statistical summaries, and regression models in PDF formats.
 
 ## Key Outcomes
-- Identified clear differences in income and captan usage between states.
-- Revealed correlations between farming practices and profitability/sleep quality (in survey-based extensions).
+- Identified clear differences in business outcomes and chemical usage between states.
 - Provided visual insights for policy-makers, researchers, and agricultural economists.
 
 ## Data set and Credits
