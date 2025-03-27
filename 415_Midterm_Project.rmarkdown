@@ -5,6 +5,8 @@ format: pdf
 editor: visual
 ---
 
+
+
 # Before Starting the Project
 
 ## Data Set
@@ -20,6 +22,8 @@ The csv file named "strawb_mar6.csv", which contains strawberry cultivation data
 ## Data Cleaning
 
 Install packages
+
+
 
 ```{r}
 # install required packages
@@ -39,7 +43,11 @@ library(stringr)
 library(ggplot2)
 ```
 
+
+
 Read File (From `USDA-NASS starwberries.qmd`)
+
+
 
 ```{r}
 # Label for the code chunk
@@ -61,7 +69,11 @@ source("my_functions.R")
 strawb <- strawberry |> drop_one_value_col()
 ```
 
+
+
 Exploring Data
+
+
 
 ```{r}
 #| label: explore strawb data
@@ -136,7 +148,11 @@ strw_survey <- s_survey |> select(-`State ANSI`, -`Week Ending`, -Period)
 rm(s_census, s_survey, strawberry, items)
 ```
 
+
+
 ## Strawberry Growth Location
+
+
 
 ```{r}
 # Starberries' grown place :)
@@ -164,9 +180,13 @@ unique(strw_census$Domain)
 unique(strw_survey$Domain)
 ```
 
+
+
 # Part 1: Chemical Analysis
 
 ## Gather Chemical Information Data
+
+
 
 ```{r}
 #Select all the rows that contains chemical use information
@@ -181,9 +201,13 @@ rm(chemical)
 
 ```
 
+
+
 In the first question, the three chemical picked from all the possible chemical is captan, thiram, propiconazole
 
 ## Chemical 1: Captan
+
+
 
 ```{r}
 # First we check the use of Captan
@@ -274,11 +298,15 @@ ggplot(captan_2023, aes(x = State, y = Value, fill = State)) +
 rm(captan_2021,captan_2023)
 ```
 
+
+
 From the graph of 2021, California uses the fungicide that contains captan (a certified carcinogenic chemical) more than Florida in general. However, when we look up into other measurement, the average detection of captan use in California is less than Florida. This is because California Strawberry Production Firm is larger than Florida in size.
 
 In 2023, There are some changes in the data. The measure in lb/acre/year and measure in number of California firm is higher than Florida firm, meaning that California uses captan fungicide more often per year, and the average number that detected captan is higher than Florida.
 
 ## Chemical 2: Thiram
+
+
 
 ```{r}
 #Follows the same step as captan
@@ -362,11 +390,15 @@ rm(thiram_2021,thiram_2023)
 
 ```
 
+
+
 From the Graph of 2021, we can see that Thiram use in Florida is higher than California in all the aspect, meaning that Florida firms uses chemical product that contains thiram higher in quantity and frequency.
 
 From the Graph of 2023, California is using thiram included product more than Florida, leading to a higher bar compared to Florida in 4 measurement. However, in number Florida is still a little bit higher than California
 
 ## Chemical 3: Novaluron
+
+
 
 ```{r}
 #Follows the same step as captan
@@ -448,6 +480,8 @@ ggplot(nov_2023, aes(x = State, y = Value, fill = State)) +
 rm(nov_2021,nov_2023)
 ```
 
+
+
 Novaluron is a kind of chemical that have a negative environmental impact.
 
 From the graph of 2021, we can see California uses Novaluron treatment more than Florida in total. However, Florida uses novaluron more often per year and slightly higher in numbers and area bearing.
@@ -455,6 +489,8 @@ From the graph of 2021, we can see California uses Novaluron treatment more than
 From the graph of 2023, we can see California still uses Novaluron more than Florida in total, and since the total quantity of california increases a lot. The other per capita measurement is higher than Florida, except measured in area bearing. It means more percentage of the Florida strawberry is treated with novaluron compare to California.
 
 # Part 2: Business Analysis
+
+
 
 ```{r}
 # recall that organic information is and sales stuff is all in census data
@@ -474,13 +510,11 @@ rm(conv_info)
 
 #after this, we need to select the data that we want to compare and put them in the same data set for graphing
 
-org_CA1 <- org_CA[str_detect(org_CA$Category, regex("SALES", ignore_case = TRUE)), ]
-org_FL1 <- org_FL[str_detect(org_FL$Category, regex("SALES", ignore_case = TRUE)), ]
-conv_CA1 <- conv_CA[str_detect(conv_CA$Domain, regex("TOTAL", ignore_case = TRUE)), ]
-conv_FL1 <- conv_FL[str_detect(conv_FL$Domain, regex("TOTAL", ignore_case = TRUE)), ]
+org_CA1 <- org_CA[str_detect(org_info$Domain, regex("TOTAL", ignore_case = TRUE)), ]
+org_FL1 <- org_FL[str_detect(org_info$Domain, regex("TOTAL", ignore_case = TRUE)), ]
+conv_CA1 <- conv_CA[str_detect(conv_info$Domain, regex("TOTAL", ignore_case = TRUE)), ]
+conv_FL1 <- conv_FL[str_detect(conv_info$Domain, regex("TOTAL", ignore_case = TRUE)), ]
 
-org <- rbind(org_CA1,org_FL1)
-conv <- rbind(conv_CA1,conv_FL1)
 
-rm(org_CA,org_CA1,org_FL,conv_CA,conv_CA1,conv_FL,conv_FL1,conv_org)
 ```
+
